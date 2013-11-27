@@ -1,14 +1,14 @@
 function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 % [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
   % Strategy parameters
-  successRate = 0;
+  successRate = zeros(stopeval,1);
   c = 0.817; % 0.817 <= c <= 1
   
   % Initialize
   xp = rand(1,n);
   fp = feval(fitnessfct,xp);
   %TODO BwE:  check the sigma initialization
-  sigma = (lb + (ub-lb).* rand(1,1) ) / 6; 
+  sigma = (lb(1,1) + (ub(1,1)-lb(1,1))* rand(1,1) ) / 6; 
   evalcount = 0;
 
   % Statistics administration
@@ -28,20 +28,26 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 
     % select best and update success-rate
     if(fo < fp)
-        successRate = successRate + 1;
+        successRate(evalcount,1) = 1;
         fp = fo;
         xp = xo;
     end
     
-    %update stepsize: change sigma every 5th execution (if needed)
-    if(mod(evalcount,5) == 0)
-        if(successRate > 2)
+    %update stepsize: change sigma every n-th execution (if needed)
+    if mod(evalcount-1,n) == 0
+        startIndex = 1;
+        if evalcount > (10*n)
+            startIndex = evalcount-10*n;
+        end
+        %Ps is the relative frequency of successful mutations measured over
+        % 10 * n trials (slides 5.3)
+        Ps = sum(successRate(startIndex:evalcount,1))/(evalcount-startIndex);
+        if(Ps > .2)
             sigma = sigma / c;
-        else if(successRate < 2)
+        else if(Ps < .2)
                 sigma = sigma * c;
             end
         end
-        successRate = 0;
     end
         
     
