@@ -1,4 +1,4 @@
-function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
+function [xp, fp, stat] = es1_1(fitnessfct, n, lb, ub, stopeval)
 % [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
   % Strategy parameters
   successRate = zeros(stopeval,1);
