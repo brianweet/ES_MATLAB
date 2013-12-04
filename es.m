@@ -50,7 +50,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         for i = 1:lambda
             % Step 1: Recombination 
             [r1, r2] = selection(xp,fp);
-            offspring(i) = recombine(r1,r2);
+            offspring(i) = recombine_discrete(r1,r2);
             % Step 2: Mutation
             offspring(i) = mutate(offspring(i));
         end 
@@ -107,5 +107,25 @@ function xp = initialize_population(n, mu, lower, upper)
     %
     % Author: B. Weeteling
     xp = lower+(upper-lower).*rand(mu,n);
+end
+
+function recombined_offspring = recombine_discrete(first_parent,second_parent)
+    % recombined_individual = recombine_discrete(first_parent,second_parent)
+    %
+    %   Recombine two parents to create one offspring
+    %   first_parent is one of the parents that will be recombined
+    %   second_parent is one of the parents that will be recombined
+    %   The order of first_parent and second_parent is arbitrary
+    %
+    % Author: B. Weeteling
+    
+    % Create random string (prob 0.5 for either 0 or 1). E.g. 111000
+    rnd1 = rand(n,1) > 0.5;        
+    % Select bits from first parent where rnd1 == 1. E.g. 101110 + 111000 -> 101000
+    first_parent = and(first_parent,rnd1);
+    % Select bits from first parent where rnd1 == 0  E.g. 111111 + 000111 -> 000111
+    second_parent = and(second_parent,~rnd1);
+    % Do the actual recombination E.g. 101000 + 000111 -> 101111
+    recombined_offspring = first_parent|second_parent;
 end
 
