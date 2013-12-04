@@ -63,31 +63,25 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
             %intermediate with two parents   
             r1 = select_random(xp);
             r2 = select_random(xp);  
-            offspring(i,:) = recombine_intermediate([r1;r2]);
+            offspring(i,:) = recombine_intermediate([r1;r2], sigma_values_for_selected_parents);
 
 %             %discrete with two parents
 %             r1 = select_random(xp);
 %             r2 = select_random(xp);            
-%             offspring(i,:) = recombine_discrete([r1;r2]);
+%             offspring(i,:) = recombine_discrete([r1;r2], sigma_values_for_selected_parents);
 %
 %             %intermediate with all parents   
 %             r1 = select_random(xp);
 %             r2 = select_random(xp); 
-%             offspring(i,:) = recombine_intermediate(xp);
+%             offspring(i,:) = recombine_intermediate(xp, sigma_values_for_selected_parents);
 %             
 %             %discrete with all parents          
-%             offspring(i,:) = recombine_discrete(xp);
+%             offspring(i,:) = recombine_discrete(xp, sigma_values_for_selected_parents);
             
             % Step 2: Mutation
             offspring(i) = mutate(offspring(i));
         end 
             
-%         %BwE Wrong::Generate offspring from parent xp
-%         for i = 1:mu
-%             % Mutation using sigma
-%             xo(i*lambda-1:i*lambda,:) = ...
-%                 repmat(xp(mu,:),[lambda 1]) + sigma * randn(lambda, n);
-%         end
         
         % Step 3: Evaluate
         % Evaluate offspring using fitnessfct
@@ -104,12 +98,9 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         xp = offspring(idx(1:mu),:);
         fp = sorted_fitness(mu);
         
-        % Update sigma
-        sigma = sigma * exp(tau*rand);
-        
         % Statistics administration
-        stat.histsigma(evalcount) = sigma;% stepsize history
-        stat.histf(evalcount) = min(fp);% fitness history
+        stat.histsigma(evalcount) = sigma;  % stepsize history
+        stat.histf(evalcount) = min(fp);    % fitness history
 
         %     % if desired: plot the statistics
         %     % Plot statistics
