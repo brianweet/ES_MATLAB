@@ -11,7 +11,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
   
     % Strategy parameters
     % Amount of parent individuals
-    mu = 5;
+    mu = 3;
     % Amount of child individuals
     lambda = 15;
   
@@ -22,10 +22,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     
     % Initialize one sigma randomly between upper and lowerbound / 6
     % TODO BwE:  check the sigma initialization
-    sigma = (lb(1,1) + (ub(1,1)-lb(1,1))* rand(1,1)) / 6;
-    
-    % Initialize Tau for 1 sigma strategy
-    tau = 1/sqrt(n);
+    sigma = (lb(1,1) + (ub(1,1)-lb(1,1)) .* rand(mu,1))/6;
     
     % Create evalcount variable
     evalcount = 0;
@@ -38,15 +35,16 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     
     % Initialize fitness
     for i = 1:mu
-        fp(i,1) = feval(fitnessfct,xp(i,:));
+        fp(i) = feval(fitnessfct,xp(i,:));
     end
-    
+    stat.histf(1:mu)=fp;
     evalcount = evalcount + mu;
     
     % Evolution cycle
     while evalcount < stopeval
         % Initialize memory for offspring 
         offspring_fitness = zeros(lambda,1);
+        offspring_sigma = zeros(lambda,1);
         offspring = zeros(lambda,n);
         
         % Steps for mu lambda strategy:
@@ -57,31 +55,34 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         
         for i = 1:lambda
             % Step 1: Recombination 
-
             %TODO BwE: create setting for recombination  method
             
-            %intermediate with two parents   
-            r1 = select_random(xp);
-            r2 = select_random(xp);  
-            offspring(i,:) = recombine_intermediate([r1;r2], sigma_values_for_selected_parents);
-
-%             %discrete with two parents
-%             r1 = select_random(xp);
-%             r2 = select_random(xp);            
-%             offspring(i,:) = recombine_discrete([r1;r2], sigma_values_for_selected_parents);
-%
-%             %intermediate with all parents   
-%             r1 = select_random(xp);
-%             r2 = select_random(xp); 
-%             offspring(i,:) = recombine_intermediate(xp, sigma_values_for_selected_parents);
+            %intermediate with all parents 
+            [offspring(i,:), offspring_sigma(i,:)] = recombine_intermediate(xp, sigma);
+            
+%             % Select parent1
+%             [p1, sigma_r1] = select_tournament(xp, sigma, fp, 5);
 %             
+%             % Remove r1 from xp (no similar parents)
+%             index = true(1, size(xp, 1));
+%             [~,idx_remove] = ismember(p1, xp,'rows');
+%             index(idx_remove) = false;
+%             
+%             % Select parent2
+%             [p2, sigma_r2] = select_tournament(xp(index, :), sigma(index, :), fp(index,:), 5); 
+%             
+%             % Intermediate with two parents 
+%             [offspring(i,:), offspring_sigma(i,:)] = recombine_intermediate([p1;p2], [sigma_r1;sigma_r2]);
+% 
+%             %discrete with two parents           
+%             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete([p1;p2], [sigma_r1;sigma_r2]);
+%           
 %             %discrete with all parents          
-%             offspring(i,:) = recombine_discrete(xp, sigma_values_for_selected_parents);
+%             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete(xp, sigma);
             
             % Step 2: Mutation
-            offspring(i) = mutate(offspring(i));
+            [offspring(i,:), offspring_sigma(i,:)] = mutate(offspring(i,:),offspring_sigma(i,:));
         end 
-            
         
         % Step 3: Evaluate
         % Evaluate offspring using fitnessfct
@@ -96,11 +97,11 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         % Pick size(mu) best individuals from offspring and set as mu(t+1)
         [sorted_fitness,idx] = sort(offspring_fitness);
         xp = offspring(idx(1:mu),:);
-        fp = sorted_fitness(mu);
+        fp = sorted_fitness(1:mu,:);
+        sigma = offspring_sigma(idx(1:mu),:);
         
         % Statistics administration
-        stat.histsigma(evalcount) = sigma;  % stepsize history
-        stat.histf(evalcount) = min(fp);    % fitness history
+        %stat.histf(evalcount) = min(fp);    % fitness history
 
         %     % if desired: plot the statistics
         %     % Plot statistics
@@ -111,7 +112,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         %     plot(stat.histsigma(1:evalcount))
         %     drawnow()
     end
-
+    min(fp)
 end
 
 function population = initialize_population(n, mu, lowerbound, upperbound)
@@ -127,12 +128,36 @@ function population = initialize_population(n, mu, lowerbound, upperbound)
     population = lowerbound+(upperbound-lowerbound).*rand(mu,n);
 end
 
+%Mutation methods
+function [mutated_individual, mutated_sigma] = mutate(individual, sigma)
+    %   [mutated_offspring, mutated_sigma] = mutate(individual, sigma)
+    %   
+    %   Can be used to mutate the individual and the sigma 
+    %   individual is the individual that will be mutated
+    %   sigma is the sigma that will be mutated
+    %
+    % Author: B. Weeteling
+    
+    n = length(individual);
+    tau = 1 / sqrt(2 * sqrt(n));
+    tau_prime = 1 / sqrt(2*n);
+    
+    
+    mutated_sigma = sigma * exp(tau_prime*randn);
+    mutated_individual =  individual + mutated_sigma * randn(1,n); 
+    
+    % TODO BwE: understand how to implement this 
+    %     mutated_sigma = sigma * exp(tau_prime * randn + tau * randn(n,1));
+    %     mutated_individual = individual + (mutated_sigma .* randn(n, 1))'; 
+end
+
 %Recombination methods
-function recombined_offspring = recombine_discrete(population)
-    % recombined_offspring = recombine_discrete(population)
+function [recombined_offspring, recombined_sigma] = recombine_discrete(population, sigma)
+    %  [recombined_offspring, recombined_sigma]  = recombine_discrete(population, sigma)
     %   
     %   Can be used for discrete and global discrete recombination 
     %   population is the list of the parents that will be recombined
+    %   sigma is the list of sigma values for the parent population
     %   The order of population is arbitrary
     %   The size of population should be > 1
     %
@@ -148,23 +173,27 @@ function recombined_offspring = recombine_discrete(population)
         selected_parent = population(selected_positions(position_index),:);
         recombined_offspring(position_index) = selected_parent(1,position_index);
     end
+    
+    recombined_sigma = mean(sigma);
 end
 
-function recombined_offspring = recombine_intermediate(population)
+function [recombined_offspring, recombined_sigma] = recombine_intermediate(population, sigma)
     % recombined_offspring = recombine_intermediate(population)
     %   
     %   Can be used for intermediate and global intermediate recombination 
     %   population is the list of the parents that will be recombined
+    %   sigma is the list of sigma values for the parent population
     %   The order of population is arbitrary
     %   The size of population should be > 1
     %
     % Author: B. Weeteling
     
     recombined_offspring = mean(population);
+    recombined_sigma = mean(sigma);
 end
 
 %Selection methods
-function selected_individual = select_random(population)
+function [selected_individual, selected_sigma] = select_random(population, sigma)
 % selected_individual = select_random(population)
 %
 %   Select 1 individual of population 'population'
@@ -173,9 +202,10 @@ function selected_individual = select_random(population)
 length_of_individual = size(population,1);
 random_individual_idx = randi(length_of_individual,1,1);
 selected_individual = population(random_individual_idx,:);
+selected_sigma = sigma(random_individual_idx,:);
 end
 
-function selected_individual = select_proportional(population, population_fitness)
+function [selected_individual, selected_sigma] = select_proportional(population, sigma, population_fitness)
 % selected_individual = select_proportional(parents, fitness)
 %
 %   Select 1 individual of population 'population' with fitness
@@ -191,10 +221,11 @@ function selected_individual = select_proportional(population, population_fitnes
 		i = i + 1;
 	end
 	selected_individual = population(i, :);
+    selected_sigma = sigma(i,:);
 
 end
 
-function selected_individual = select_tournament(population, population_fitness, tournament_size)
+function [selected_individual, selected_sigma] = select_tournament(population, sigma, population_fitness, tournament_size)
 % selected_individual = select_tournament(population, population_fitness, tournament_size)
 %
 %   Select 1 individual of population 'population' with fitness
@@ -202,12 +233,17 @@ function selected_individual = select_tournament(population, population_fitness,
 %   'tournament_size' is the tournament size
 %
 % Author: B. Weeteling
-
-    selected_individuals_index = randi(size(population,1),1,tournament_size);
+    if tournament_size > size(population,1) 
+        error('tournament size should be smaller then population size'); 
+    end
+    
+    selected_individuals_index = randperm(size(population,1),tournament_size);
     selected_individuals = population(selected_individuals_index,:);
     selected_fitness = population_fitness(selected_individuals_index,:);
+    selected_sigmas = sigma(selected_individuals_index,:);
     
     [~,best_index] = sort(selected_fitness);
     selected_individual = selected_individuals(best_index(1,1), :);
+    selected_sigma = selected_sigmas(best_index(1,1), :);
 end
 
