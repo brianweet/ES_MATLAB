@@ -1,10 +1,19 @@
 function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
+% [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
+%
+%   Run mu+lambda ES with the given objective fitness function
+%   n is the number of dimensions
+%   lb is the lowerbound of the search space
+%   ub is the upperbound of the search space
+%   stopeval is the max amount of function evaluations
+%
+% Author: B. Weeteling
   
     % Strategy parameters
     % Amount of parent individuals
     mu = 2;
     % Amount of child individuals
-    lambda = 2;
+    lambda = 15;
   
     % Initialize population
     xp = initialize_population(n, mu, lb(1,1), ub(1,1));
@@ -13,56 +22,63 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     % Initialize one sigma randomly between upper and lowerbound / 6
     % TODO BwE:  check the sigma initialization
     sigma = (lb(1,1) + (ub(1,1)-lb(1,1))* rand(1,1)) / 6;
+    
+    % Initialize Tau for 1 sigma strategy
+    tau = 1/sqrt(n);
+    
     % Create evalcount variable
     evalcount = 0;
-    % Set empty succes rate array (we're keeping track of every evaluation,not needed per se)
-    successRate = zeros(stopeval,1);
   
     % Statistics administration
-    stat.name = ['(mu+lambda)-ES mu:' mu ' lambda: ' lambda] ;
+    stat.name = ['(mu,lambda)-ES mu:' mu ' lambda: ' lambda] ;
     stat.evalcount = 0;
     stat.histsigma = zeros(1, stopeval);
     stat.histf = zeros(1, stopeval);
     
     % Evolution cycle
     while evalcount < stopeval
-        % Initialize offspring fitness var
-        fo = zeros(mu*lambda,1);
-        xo = zeros(mu*lambda,n);
+        % Initialize memory for offspring 
+        offspring_fitness = zeros(lambda,1);
+        offspring = zeros(lambda,n);
         
-        % Generate offspring from parent xp
-        for i = 1:mu
-            xo(i*lambda-1:i*lambda,:) = ...
-                repmat(xp(mu,:),[lambda 1]) + sigma * randn(lambda, n);
+        % Steps for mu lambda strategy:
+        % 1.Recombine    
+        % 2.Mutate        
+        % 3.Evaluate        
+        % 4.Select
+        
+        for i = 1:lambda
+            % Step 1: Recombination 
+            [r1, r2] = selection(xp,fp);
+            offspring(i) = recombine(r1,r2);
+            % Step 2: Mutation
+            offspring(i) = mutate(offspring(i));
+        end 
+            
+%         %BwE Wrong::Generate offspring from parent xp
+%         for i = 1:mu
+%             % Mutation using sigma
+%             xo(i*lambda-1:i*lambda,:) = ...
+%                 repmat(xp(mu,:),[lambda 1]) + sigma * randn(lambda, n);
+%         end
+        
+        % Step 3: Evaluate
+        % Evaluate offspring using fitnessfct
+        for j = 1:lambda
+            offspring_fitness(j,1) = feval(fitnessfct,offspring(j,:));
         end
-        
-        % Evaluate new population using fitnessfct
-        for j = 1:mu*lambda
-            fo(j,1) = feval(fitnessfct,xo(j,:));
-        end
-        
-        xp = xo;
-        fp = fo;
         
         % Increment eval counter
-        evalcount = evalcount + mu*lambda;
+        evalcount = evalcount + lambda;
         
-        % Update stepsize: change sigma every n-th execution (if needed)
-%         if mod(evalcount-1,n) == 0
-%             startIndex = 1;
-%             if evalcount > (10*n)
-%                 startIndex = evalcount-10*n;
-%             end
-%             %Ps is the relative frequency of successful mutations measured over
-%             % 10 * n trials (slides 5.3)
-%             Ps = sum(successRate(startIndex:evalcount,1))/(evalcount-startIndex);
-%             if(Ps > .2)
-%                 sigma = sigma / c;
-%             else if(Ps < .2)
-%                     sigma = sigma * c;
-%                 end
-%             end
-%         end
+        % Step 4: Select
+        % Pick size(mu) best individuals from offspring and set as mu(t+1)
+        [sorted_fitness,idx] = sort(offspring_fitness);
+        xp = offspring(idx(1:mu),:);
+        fp = sorted_fitness(mu);
+        
+        % Update sigma
+        sigma = sigma * exp(tau*rand);
         
         % Statistics administration
         stat.histsigma(evalcount) = sigma;% stepsize history

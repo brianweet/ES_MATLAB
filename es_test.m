@@ -15,9 +15,9 @@
 % [xopt, fopt] = lastname1_lastname2_es(@bbf1, 30, -100 * ones(1,30), 
 % 100 * ones(1,30), 10000) 
 
-multiple_runs(@es1_1, @bbf1, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
+multiple_runs(@es, @bbf1, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 1)
 load('statistics.mat');
-plot_statistics(stat, @bbf1, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10)
+plot_statistics(stat, @bbf1, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 1)
 
 % multiple_runs(@es,@bbf2, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
 % load('statistics.mat');

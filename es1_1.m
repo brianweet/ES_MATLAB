@@ -1,5 +1,14 @@
 function [xp, fp, stat] = es1_1(fitnessfct, n, lb, ub, stopeval)
-% [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
+% [xp, fp, stat] = es1_1(fitnessfct, n, lb, ub, stopeval)
+%
+%   Run 1+1 ES with the given objective fitness function
+%   n is the number of dimensions
+%   lb is the lowerbound of the search space
+%   ub is the upperbound of the search space
+%   stopeval is the max amount of function evaluations
+%
+% Author: B. Weeteling
+  
   % Strategy parameters
   successRate = zeros(stopeval,1);
   c = 0.817; % 0.817 <= c <= 1
