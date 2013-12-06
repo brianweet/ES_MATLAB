@@ -1,52 +1,27 @@
-% es(@sphere, 10, -10, 10, 10000)
+handles = {@bbf1, @bbf2, @bbf3, @bbf4, @bbf5};
+runs = 20;
 
-% multiple_runs(@es,@sphere, 10, -10, 10, 10000, 10)
-% load('statistics.mat');
-% plot_statistics(stat, @sphere, 10, -10, 10, 10000, 10)
+mu = 3;
+lambda = 12;
+for i = 1:length(handles)
+    handle = handles{i};
+    func2str(handle);
+    
+    figure;
+    hold on
+    multiple_runs(@es2, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, runs, mu, lambda);
+    load('statistics.mat');
+    legendname1 = plot_statistics(stat, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 1000, runs, 'r');
+    
+    multiple_runs(@es2, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, runs, 15, 100);
+    load('statistics.mat');
+    legendname2 = plot_statistics(stat, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 1000, runs, 'g');
 
-% multiple_runs(@es,@ackley, 10, -10, 10, 10000, 10)
-% load('statistics.mat');
-% plot_statistics(stat, @ackley, 10, -10, 10, 10000, 10)
- 
-% multiple_runs(@es,@rosenbrock, 10, -10, 10, 10000, 10)
-% load('statistics.mat');
-% plot_statistics(stat, @rosenbrock, 10, -10, 10, 10000, 10)
+    multiple_runs(@es1_1, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, runs, mu, lambda);
+    load('statistics.mat');
+    legendname3 = plot_statistics(stat, handle, 30, -100 * ones(1,30), 100 * ones(1,30), 1000, runs, ':b');
 
-% [xopt, fopt] = lastname1_lastname2_es(@bbf1, 30, -100 * ones(1,30), 
-% 100 * ones(1,30), 10000) 
-
-% multiple_runs(@es, @bbf2, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 5);
-% load('statistics.mat');
-% plot_statistics(stat, @bbf2, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 5);
-
-multiple_runs(@es2, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-load('statistics.mat');
-plot_statistics(stat, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-
-multiple_runs(@es3, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-load('statistics.mat');
-plot_statistics(stat, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-
-multiple_runs(@es1_1, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-load('statistics.mat');
-plot_statistics(stat, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10);
-
-% multiple_runs(@es,@bbf2, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
-% load('statistics.mat');
-% plot_statistics(stat, @bbf2, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10)
-% 
-% 
-% multiple_runs(@es,@bbf3, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
-% load('statistics.mat');
-% plot_statistics(stat, @bbf3, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10)
-% 
-% 
-% multiple_runs(@es,@bbf4, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
-% load('statistics.mat');
-% plot_statistics(stat, @bbf4, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10)
-% 
-% 
-% multiple_runs(@es,@bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000,10)
-% load('statistics.mat');
-% plot_statistics(stat, @bbf5, 30, -100 * ones(1,30), 100 * ones(1,30), 10000, 10)
-
+    legend(legendname1, legendname2, legendname3)
+    hold off
+    
+end

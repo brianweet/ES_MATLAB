@@ -28,7 +28,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     evalcount = 0;
   
     % Statistics administration
-    stat.name = ['(mu,lambda)-ES mu:' num2str(mu) ' lambda: ' num2str(lambda)] ;
+    stat.name = ['(' num2str(mu) ',' num2str(lambda) ')-ES'];
     stat.evalcount = 0;
     stat.histsigma = zeros(1, stopeval);
     stat.histf = zeros(1, stopeval);

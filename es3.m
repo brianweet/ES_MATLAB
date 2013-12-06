@@ -1,4 +1,4 @@
-function [xp, fp, stat] = es3(fitnessfct, n, lb, ub, stopeval)
+function [xp, fp, stat] = es3(fitnessfct, n, lb, ub, stopeval, mu, lambda)
 % [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 %
 %   Run mu+lambda ES with the given objective fitness function
@@ -11,9 +11,9 @@ function [xp, fp, stat] = es3(fitnessfct, n, lb, ub, stopeval)
   
     % Strategy parameters
     % Amount of parent individuals
-    mu = 5;
+    %mu = 5;
     % Amount of child individuals
-    lambda = 15;
+    %lambda = 12;
   
     % Initialize population
     xp = initialize_population(n, mu, lb(1,1), ub(1,1));
@@ -28,7 +28,7 @@ function [xp, fp, stat] = es3(fitnessfct, n, lb, ub, stopeval)
     evalcount = 0;
   
     % Statistics administration
-    stat.name = ['(mu,lambda)-ES tau mu:' num2str(mu) ' lambda: ' num2str(lambda)] ;
+    stat.name = ['(' num2str(mu) ',' num2str(lambda) ')-ES only tau\prime'];
     stat.evalcount = 0;
     stat.histsigma = zeros(1, stopeval);
     stat.histf = zeros(1, stopeval);
