@@ -52,7 +52,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         % 2.Mutate        
         % 3.Evaluate        
         % 4.Select
-        
+        tau_prime = 1 / sqrt(2*n);;
         for i = 1:lambda
             % Step 1: Recombination 
             %TODO BwE: create setting for recombination  method
@@ -81,7 +81,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 %             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete(xp, sigma);
             
             % Step 2: Mutation
-            [offspring(i,:), offspring_sigma(i,:)] = mutate(offspring(i,:),offspring_sigma(i,:));
+            [offspring(i,:), offspring_sigma(i,:)] = mutate(offspring(i,:),offspring_sigma(i,:), tau_prime);
         end 
         
         % Step 3: Evaluate
@@ -101,7 +101,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
         sigma = offspring_sigma(idx(1:mu),:);
         
         % Statistics administration
-        %stat.histf(evalcount) = min(fp);    % fitness history
+        stat.histf(evalcount-lambda:evalcount) = min(fp);    % fitness history
 
         %     % if desired: plot the statistics
         %     % Plot statistics
@@ -129,7 +129,7 @@ function population = initialize_population(n, mu, lowerbound, upperbound)
 end
 
 %Mutation methods
-function [mutated_individual, mutated_sigma] = mutate(individual, sigma)
+function [mutated_individual, mutated_sigma] = mutate(individual, sigma, tau_prime)
     %   [mutated_offspring, mutated_sigma] = mutate(individual, sigma)
     %   
     %   Can be used to mutate the individual and the sigma 
@@ -140,15 +140,14 @@ function [mutated_individual, mutated_sigma] = mutate(individual, sigma)
     
     n = length(individual);
     tau = 1 / sqrt(2 * sqrt(n));
-    tau_prime = 1 / sqrt(2*n);
     
     
-    mutated_sigma = sigma * exp(tau_prime*randn);
-    mutated_individual =  individual + mutated_sigma * randn(1,n); 
+%     mutated_sigma = sigma * exp(tau_prime*randn);
+%     mutated_individual =  individual + mutated_sigma * randn(1,n); 
     
     % TODO BwE: understand how to implement this 
-    %     mutated_sigma = sigma * exp(tau_prime * randn + tau * randn(n,1));
-    %     mutated_individual = individual + (mutated_sigma .* randn(n, 1))'; 
+    mutated_sigma = sigma * exp(tau_prime * randn + tau * randn);
+    mutated_individual = individual + (mutated_sigma .* randn(n, 1))'; 
 end
 
 %Recombination methods

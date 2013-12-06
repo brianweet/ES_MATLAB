@@ -14,7 +14,7 @@ function [xp, fp, stat] = es1_1(fitnessfct, n, lb, ub, stopeval)
   c = 0.817; % 0.817 <= c <= 1
   
   % Initialize
-  xp = rand(1,n);
+  xp = lb+(ub-lb).*rand(1,n);
   fp = feval(fitnessfct,xp);
   %TODO BwE:  check the sigma initialization
   sigma = (lb(1,1) + (ub(1,1)-lb(1,1))* rand(1,1) ) / 6;
@@ -73,6 +73,5 @@ function [xp, fp, stat] = es1_1(fitnessfct, n, lb, ub, stopeval)
 %     plot(stat.histsigma(1:evalcount))
 %     drawnow()
   end
-
 end
 
