@@ -47,7 +47,7 @@ function [xp, fp, stat] = es2(fitnessfct, n, lb, ub, stopeval, mu, lambda)
         % Initialize memory for offspring 
         offspring_fitness = zeros(lambda,1);
         offspring_sigma = repmat(mean(sigma), lambda,1);        
-        offspring = repmat(mean(xp), lambda,1);
+        offspring = repmat(mean(xp,1), lambda,1);
         
         for i = 1:lambda
             tau = 1 / sqrt(2 * sqrt(n));
