@@ -1,4 +1,4 @@
-function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
+function [xp, fp, stat] = es2(fitnessfct, n, lb, ub, stopeval)
 % [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 %
 %   Run mu+lambda ES with the given objective fitness function
@@ -11,9 +11,9 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
   
     % Strategy parameters
     % Amount of parent individuals
-    mu = 3;
+    mu = 5;
     % Amount of child individuals
-    lambda = 12;
+    lambda = 15;
   
     % Initialize population
     xp = initialize_population(n, mu, lb(1,1), ub(1,1));
@@ -28,7 +28,7 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     evalcount = 0;
   
     % Statistics administration
-    stat.name = ['(mu,lambda)-ES mu:' num2str(mu) ' lambda: ' num2str(lambda)] ;
+    stat.name = ['(mu,lambda)-ES tau tau prime mu:' num2str(mu) ' lambda: ' num2str(lambda)] ;
     stat.evalcount = 0;
     stat.histsigma = zeros(1, stopeval);
     stat.histf = zeros(1, stopeval);
@@ -42,26 +42,35 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
     
     % Evolution cycle
     while evalcount < stopeval
+        tau_prime = 1 / sqrt(2*n);
+        
         % Initialize memory for offspring 
         offspring_fitness = zeros(lambda,1);
-        offspring_sigma = zeros(lambda,1);
-        offspring = zeros(lambda,n);
+        offspring_sigma = repmat(mean(sigma), lambda,1);        
+        offspring = repmat(mean(xp), lambda,1);
+        
+        for i = 1:lambda
+            tau = 1 / sqrt(2 * sqrt(n));
+            offspring_sigma(i,:) = offspring_sigma(i,:) * exp(tau_prime*randn+tau*randn);
+            offspring(i,:) = offspring(i,:) + offspring_sigma(i,:) * randn(1, n);
+            offspring_fitness(i,1) = feval(fitnessfct,offspring(i,:));
+        end
         
         % Steps for mu lambda strategy:
         % 1.Recombine    
         % 2.Mutate        
         % 3.Evaluate        
         % 4.Select
-        tau_prime = 1 / sqrt(2*n);
-        for i = 1:lambda
-            % Step 1: Recombination 
-            %TODO BwE: create setting for recombination  method
-            
-            %intermediate with all parents 
-            [offspring(i,:), offspring_sigma(i,:)] = recombine_intermediate(xp, sigma);
-            
+        
+%         for i = 1:lambda
+%             % Step 1: Recombination 
+%             %TODO BwE: create setting for recombination  method
+%             
+%             %intermediate with all parents 
+%             %[offspring(i,:), offspring_sigma(i,:)] = recombine_intermediate(xp, sigma);
+%             
 %             % Select parent1
-%             [p1, sigma_r1] = select_tournament(xp, sigma, fp, 5);
+%             [p1, sigma_r1] = select_tournament(xp, sigma, fp, 2);
 %             
 %             % Remove r1 from xp (no similar parents)
 %             index = true(1, size(xp, 1));
@@ -69,26 +78,26 @@ function [xp, fp, stat] = es(fitnessfct, n, lb, ub, stopeval)
 %             index(idx_remove) = false;
 %             
 %             % Select parent2
-%             [p2, sigma_r2] = select_tournament(xp(index, :), sigma(index, :), fp(index,:), 5); 
-%             
+%             [p2, sigma_r2] = select_tournament(xp(index, :), sigma(index, :), fp(index,:), 2); 
+%              
 %             % Intermediate with two parents 
 %             [offspring(i,:), offspring_sigma(i,:)] = recombine_intermediate([p1;p2], [sigma_r1;sigma_r2]);
-% 
-%             %discrete with two parents           
-%             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete([p1;p2], [sigma_r1;sigma_r2]);
-%           
-%             %discrete with all parents          
-%             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete(xp, sigma);
-            
-            % Step 2: Mutation
-            [offspring(i,:), offspring_sigma(i,:)] = mutate(offspring(i,:),offspring_sigma(i,:), tau_prime);
-        end 
+% % 
+% %             %discrete with two parents           
+% %             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete([p1;p2], [sigma_r1;sigma_r2]);
+% %           
+% %             %discrete with all parents          
+% %             [offspring(i,:), offspring_sigma(i,:)] = recombine_discrete(xp, sigma);
+%             
+%             % Step 2: Mutation
+%             [offspring(i,:), offspring_sigma(i,:)] = mutate(offspring(i,:),offspring_sigma(i,:), tau_prime);
+%         end 
         
         % Step 3: Evaluate
         % Evaluate offspring using fitnessfct
-        for j = 1:lambda
-            offspring_fitness(j,1) = feval(fitnessfct,offspring(j,:));
-        end
+%         for j = 1:lambda
+%             offspring_fitness(j,1) = feval(fitnessfct,offspring(j,:));
+%         end
         
         % Increment eval counter
         evalcount = evalcount + lambda;

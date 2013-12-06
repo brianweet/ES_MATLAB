@@ -1,6 +1,6 @@
 function ParentPop = test()
-mu = 3;                 % number of parents
-lambda = 12;            % number of offspring
+mu = 5;                 % number of parents
+lambda = 15;            % number of offspring
 yInit = ones(30,1);     % initial parent vector 
 sigmaInit = 1;          % initial global mutation strength sigma 
 sigmaMin = 1e-10;       % ES stops when sigma is smaller than sigmaMin
@@ -16,7 +16,7 @@ for i=1:mu; ParentPop{i} = Individual; end
 
 
 count = 0;
-while(count < 1000)
+while(count < 10000)
  Recombinant = recombine(ParentPop);              % recombine parents
  for l = 1:lambda;                                % generate lambda offspring
   OffspringIndividual.sigma = Recombinant.sigma * exp(tau*randn); % mutate sigma
@@ -29,7 +29,7 @@ while(count < 1000)
  if ( ParentPop{1}.sigma < sigmaMin ) 
      break 
  end % termination criterion
- count = count+1;
+ count = count+lambda;
 end
 end
 
@@ -37,7 +37,7 @@ end
 % function to be optimized (sphere test function as an example, to be changed):
 function out = fitness(x)
     x=x';
-    out = feval(@bbf1,x);
+    out = feval(@bbf5,x);
     %out = sum(x.*x); 
 end
 
