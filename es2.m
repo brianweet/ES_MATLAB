@@ -43,6 +43,7 @@ function [xp, fp, stat] = es2(fitnessfct, n, lb, ub, stopeval, mu, lambda)
     % Evolution cycle
     while evalcount < stopeval
         tau_prime = 1 / sqrt(2*n);
+        global_rate = tau_prime*randn;
         
         % Initialize memory for offspring 
         offspring_fitness = zeros(lambda,1);
@@ -51,7 +52,7 @@ function [xp, fp, stat] = es2(fitnessfct, n, lb, ub, stopeval, mu, lambda)
         
         for i = 1:lambda
             tau = 1 / sqrt(2 * sqrt(n));
-            offspring_sigma(i,:) = offspring_sigma(i,:) * exp(tau_prime*randn+tau*randn);
+            offspring_sigma(i,:) = offspring_sigma(i,:) * exp(global_rate+tau*randn);
             offspring(i,:) = offspring(i,:) + offspring_sigma(i,:) * randn(1, n);
             offspring_fitness(i,1) = feval(fitnessfct,offspring(i,:));
         end

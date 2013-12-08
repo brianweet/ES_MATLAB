@@ -49,6 +49,7 @@ function [xopt, fopt] = weeteling_blikman_es(fitnessfct, n, lb, ub, stopeval)
 	% Evolution cycle	
     while evalcount < stopeval
         tau_prime = 1 / sqrt(2*n);
+        global_rate = tau_prime*randn;
         
         % Initialize memory for offspring 
         offspring_fitness = zeros(lambda,1);
@@ -60,7 +61,7 @@ function [xopt, fopt] = weeteling_blikman_es(fitnessfct, n, lb, ub, stopeval)
 			%individual tau
             tau = 1 / sqrt(2 * sqrt(n));
 			% 2.Mutate
-            offspring_sigma(i,:) = offspring_sigma(i,:) * exp(tau_prime*randn+tau*randn);
+            offspring_sigma(i,:) = offspring_sigma(i,:) * exp(global_rate+tau*randn);
             offspring(i,:) = offspring(i,:) + offspring_sigma(i,:) * randn(1, n);
 			% 3.Evaluate   
             offspring_fitness(i,1) = feval(fitnessfct,offspring(i,:));

@@ -5,7 +5,7 @@ mu = 3;
 lambda = 12;
 for i = 1:length(handles)
     handle = handles{i};
-    func2str(handle);
+    
     
     figure;
     hold on
